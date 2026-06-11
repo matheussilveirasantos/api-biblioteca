@@ -1,0 +1,42 @@
+# render.yaml — Blueprint para deploy no Render
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Como usar:
+# 1. Faça push deste repositório no GitHub
+# 2. No Render: New → Blueprint → conecte o repositório
+# 3. Preencha os segredos marcados com sync: false no Dashboard
+# 4. Vincule o banco PostgreSQL existente (Internal Hostname)
+
+services:
+  - type: web
+    name: biblioteca-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      # Opção A — manual (recomendado):
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # Opção B — vincule o PostgreSQL no Dashboard ("Add from Database")
+      # e o Render injeta DATABASE_URL automaticamente
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: EMAIL_DESTINATARIOS
+        sync: false

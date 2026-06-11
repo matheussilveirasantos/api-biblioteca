@@ -1,112 +1,52 @@
 # Biblioteca API
 
-API REST para gerenciamento de catálogo de livros, construída com Spring Boot 3 + PostgreSQL + JWT.
-
-## Endpoints principais
-
-| Método | Rota | Descrição | Auth |
-|--------|------|-----------|------|
-| POST | `/auth/register` | Cadastrar novo usuário | ❌ |
-| POST | `/auth/login` | Login → retorna JWT | ❌ |
-| GET | `/livros` | Listar livros | ✅ |
-| POST | `/livros` | Criar livro | ✅ |
-| PUT | `/livros/{id}` | Atualizar livro | ✅ |
-| DELETE | `/livros/{id}` | Remover livro | ✅ |
-| GET | `/autores` | Listar autores | ✅ |
-| GET | `/generos` | Listar gêneros | ✅ |
-| GET | `/editoras` | Listar editoras | ✅ |
-
-A documentação completa está disponível em `/swagger-ui.html`.
+API REST de catálogo de livros com autenticação JWT — deployada no [Render](https://render.com).
 
 ## Deploy no Render
 
-### 1. Banco de Dados PostgreSQL
+### Pré-requisitos
+- Conta no [Render](https://dashboard.render.com)
+- Banco PostgreSQL já criado (as credenciais estão na imagem da pergunta)
+- Repositório no GitHub com este código
 
-1. No [Render Dashboard](https://dashboard.render.com), clique em **New → PostgreSQL**
-2. Defina um nome (ex: `biblioteca-db`) e crie
-3. Copie a **External Database URL** (usada localmente) e o **Internal Database URL** (usado pelo serviço na mesma região)
+### Variáveis de ambiente (configurar no Dashboard do Render)
 
-### 2. Web Service (API)
+| Variável             | Descrição                                   | Exemplo                          |
+|----------------------|---------------------------------------------|----------------------------------|
+| `DB_URL`             | URL JDBC do banco (hostname interno)        | `jdbc:postgresql://dpg-xxx:5432/biblioteca_5ihl` |
+| `DB_USERNAME`        | Usuário do banco                            | `biblioteca`                     |
+| `DB_PASSWORD`        | Senha do banco                              | *(segredo)*                      |
+| `JWT_SECRET`         | Chave Base64URL para assinar tokens JWT     | *(segredo, mín. 32 bytes)*       |
+| `JWT_EXPIRATION`     | Expiração do token em ms                    | `86400000` (24h)                 |
+| `MAIL_USERNAME`      | E-mail Gmail para envio                     | `seu@gmail.com`                  |
+| `MAIL_PASSWORD`      | Senha de app do Gmail (não a senha normal)  | *(segredo)*                      |
+| `EMAIL_DESTINATARIOS`| E-mail(s) de destino separados por vírgula  | `admin@biblioteca.com`           |
 
-1. Clique em **New → Web Service**
-2. Conecte ao seu repositório GitHub
-3. Configure:
-   - **Runtime:** Docker
-   - **Region:** mesma do banco
+> **Importante:** `DB_URL` deve usar o **Internal Hostname** do Render (ex: `dpg-xxx-a`), pois app e banco estão na mesma rede interna.
 
-### 3. Variáveis de Ambiente no Render
+### Passos
+1. Faça push deste projeto para um repositório GitHub
+2. No Render: **New → Web Service → Connect Repository**
+3. Render detecta automaticamente o `Dockerfile`
+4. Preencha as variáveis de ambiente acima em **Environment**
+5. Clique em **Deploy**
 
-Na aba **Environment** do Web Service, adicione:
+### Endpoints principais
+- `POST /auth/login` — autenticação
+- `POST /auth/cadastrar` — registro de usuário
+- `GET /swagger-ui.html` — documentação interativa
+- `GET /actuator/health` — health check
 
-| Variável | Valor |
-|----------|-------|
-| `DATABASE_URL` | Cole a **Internal Database URL** do Render, mas troque `postgresql://` por `jdbc:postgresql://` |
-| `DB_USERNAME` | Username do banco (ex: `biblioteca`) |
-| `DB_PASSWORD` | Password do banco |
-| `JWT_SECRET` | Uma string longa e aleatória |
-| `JWT_EXPIRATION` | `86400000` (24h em ms) |
-| `CORS_ALLOWED_ORIGINS` | URL do seu frontend React (ex: `https://meu-app.vercel.app`) |
-| `MAIL_USERNAME` | Seu email Gmail (opcional) |
-| `MAIL_PASSWORD` | Senha de app Gmail (opcional) |
-
-> **Dica:** O Render pode linkar o banco automaticamente via **Environment Groups** — ao linkar, ele injeta `DATABASE_URL` no formato correto (com `postgresql://`). Nesse caso, substitua no `application.properties` por `${DATABASE_URL}` diretamente usando o driver JDBC URL conforme documentado acima.
-
-### 4. Como converter a DATABASE_URL do Render
-
-O Render fornece: `postgresql://usuario:senha@host:5432/dbname`
-
-Você precisa passar como: `jdbc:postgresql://host:5432/dbname`
-
-Então crie as variáveis separadas:
-- `DATABASE_URL` = `jdbc:postgresql://HOST:5432/DBNAME`
-- `DB_USERNAME` = `usuario`
-- `DB_PASSWORD` = `senha`
-
-## Rodando localmente
+## Execução local (Docker)
 
 ```bash
-# Copie e configure as variáveis
-cp .env.example .env
-
-# Com Docker Compose
-docker-compose up
-
-# Ou direto com Maven (requer PostgreSQL rodando)
-./mvnw spring-boot:run
+# Crie um .env com as variáveis acima, depois:
+docker compose up --build
 ```
 
-## Registro e Login
+A API ficará em `http://localhost:8080`.
 
-**Registrar:**
-```json
-POST /auth/register
-{
-  "nome": "João Silva",
-  "username": "joao",
-  "email": "joao@email.com",
-  "password": "minhasenha123"
-}
-```
+## Segurança
 
-**Login:**
-```json
-POST /auth/login
-{
-  "username": "joao",
-  "password": "minhasenha123"
-}
-```
-
-**Resposta do login:**
-```json
-{
-  "token": "eyJhbGci...",
-  "tipo": "Bearer",
-  "username": "joao"
-}
-```
-
-Use o token nas requisições autenticadas:
-```
-Authorization: Bearer eyJhbGci...
-```
+- Rotacione `DB_PASSWORD`, `JWT_SECRET` e `MAIL_PASSWORD` se o `.env` já foi commitado no passado
+- O `.gitignore` impede novos commits de segredos e da pasta `target/`
