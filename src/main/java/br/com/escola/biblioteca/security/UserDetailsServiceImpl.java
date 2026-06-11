@@ -1,37 +1,38 @@
 package br.com.escola.biblioteca.security;
 
+import br.com.escola.biblioteca.entity.Usuario;
+import br.com.escola.biblioteca.repository.UsuarioRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final PasswordEncoder passwordEncoder;
+    private final UsuarioRepository usuarioRepository;
 
-    public UserDetailsServiceImpl(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
+    public UserDetailsServiceImpl(UsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if ("admin".equals(username)) {
-            return User.builder()
-                    .username("admin")
-                    .password(passwordEncoder.encode("admin123"))
-                    .roles("ADMIN")
-                    .build();
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));
+
+        if (!usuario.getAtivo()) {
+            throw new UsernameNotFoundException("Usuário inativo: " + email);
         }
-        if ("biblioteca".equals(username)) {
-            return User.builder()
-                    .username("biblioteca")
-                    .password(passwordEncoder.encode("biblio@2025"))
-                    .roles("USER")
-                    .build();
-        }
-        throw new UsernameNotFoundException("Usuário não encontrado: " + username);
+
+        return new User(
+                usuario.getEmail(),
+                usuario.getSenha(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getRole().name()))
+        );
     }
 }
