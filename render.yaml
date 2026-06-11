@@ -21,12 +21,15 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+      # Opção A — manual (recomendado):
       - key: DB_URL
         sync: false
       - key: DB_USERNAME
         sync: false
       - key: DB_PASSWORD
         sync: false
+      # Opção B — vincule o PostgreSQL no Dashboard ("Add from Database")
+      # e o Render injeta DATABASE_URL automaticamente
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRATION

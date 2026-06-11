@@ -45,13 +45,23 @@ Use o banco existente no [dashboard Render](https://dashboard.render.com/) com e
 
 ### 4. Variáveis de ambiente (Environment)
 
-No Web Service → **Environment**, adicione:
+No Web Service → **Environment**, use **uma** das opções:
+
+**Opção A — variáveis JDBC (recomendado):**
 
 | Variável | Valor |
 |----------|-------|
 | `DB_URL` | `jdbc:postgresql://dpg-d8kvr9ugvqtc73ad819g-a:5432/biblioteca_5ihl` |
 | `DB_USERNAME` | `biblioteca` |
 | `DB_PASSWORD` | *(senha da aba Connections)* |
+
+**Opção B — vincular o banco no Render:**
+
+1. Em **Environment** → **Add from Database**
+2. Selecione o PostgreSQL `biblioteca_5ihl`
+3. O Render injeta `DATABASE_URL` — a API converte automaticamente
+
+> Se nenhuma das duas opções estiver configurada, a API tenta `localhost` e o deploy falha com erro de *Dialect*.
 | `JWT_SECRET` | Chave Base64URL (mín. 32 bytes) | *(segredo)* |
 | `JWT_EXPIRATION` | Expiração do token em ms | `86400000` |
 | `MAIL_USERNAME` | E-mail Gmail para envio | `seu@gmail.com` |
