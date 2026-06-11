@@ -12,7 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./src/main/resources/Biblioteca.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d biblioteca"]
       interval: 10s
@@ -31,27 +30,21 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     environment:
-      # Banco de dados
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/biblioteca
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-123456}
-      # JWT
-      JWT_SECRET: ${JWT_SECRET:-01010010_01100001_01111001_01101100_01100001}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
-      # E-mail
-      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-shakelivro@gmail.com}
-      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
-      # Perfil
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
-    volumes:
-      - app_logs:/app/logs
+      DB_URL: jdbc:postgresql://postgres:5432/biblioteca
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-123456}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      EMAIL_DESTINATARIOS: ${EMAIL_DESTINATARIOS}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 90s
 
 volumes:
   postgres_data:
-  app_logs:
