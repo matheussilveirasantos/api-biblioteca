@@ -19,14 +19,18 @@ public class JwtUtil {
     private long expiration;
 
     private SecretKey getKey() {
-    	return Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secret));
+        byte[] keyBytes = Decoders.BASE64URL.decode(secret);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String gerarToken(String username) {
+        Date agora = new Date();
+        Date expira = new Date(agora.getTime() + expiration);
+
         return Jwts.builder()
                 .subject(username)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .issuedAt(agora)
+                .expiration(expira)
                 .signWith(getKey())
                 .compact();
     }
@@ -41,11 +45,22 @@ public class JwtUtil {
     }
 
     public boolean validarToken(String token) {
+        if (token == null || token.isBlank()) return false;
         try {
-            Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(token);
+            Jwts.parser()
+                .verifyWith(getKey())
+                .build()
+                .parseSignedClaims(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
+        } catch (ExpiredJwtException e) {
+            logger.warn("Token JWT expirado: " + e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            logger.warn("Token JWT não suportado: " + e.getMessage());
+        } catch (MalformedJwtException e) {
+            logger.warn("Token JWT malformado: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.warn("Token JWT inválido: " + e.getMessage());
         }
+        return false;
     }
 }
