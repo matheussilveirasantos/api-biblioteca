@@ -1,8 +1,7 @@
 package br.com.escola.biblioteca.service;
 
-import br.com.escola.biblioteca.dto.CadastroRequestDTO;
-import br.com.escola.biblioteca.dto.CadastroResponseDTO;
-import br.com.escola.biblioteca.entity.RoleEnum;
+import br.com.escola.biblioteca.dto.RegisterRequestDTO;
+import br.com.escola.biblioteca.dto.RegisterResponseDTO;
 import br.com.escola.biblioteca.entity.Usuario;
 import br.com.escola.biblioteca.exception.BusinessException;
 import br.com.escola.biblioteca.repository.UsuarioRepository;
@@ -20,18 +19,22 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public CadastroResponseDTO cadastrar(CadastroRequestDTO dto) {
+    public RegisterResponseDTO registrar(RegisterRequestDTO dto) {
+        if (usuarioRepository.existsByUsername(dto.username())) {
+            throw new BusinessException("Username '" + dto.username() + "' já está em uso");
+        }
         if (usuarioRepository.existsByEmail(dto.email())) {
-            throw new BusinessException("Já existe um usuário cadastrado com este e-mail.");
+            throw new BusinessException("Email '" + dto.email() + "' já está em uso");
         }
 
-        Usuario usuario = new Usuario(
-                dto.nome(),
-                dto.email(),
-                passwordEncoder.encode(dto.senha()),
-                RoleEnum.USER
-        );
+        Usuario usuario = new Usuario();
+        usuario.setNome(dto.nome());
+        usuario.setUsername(dto.username());
+        usuario.setEmail(dto.email());
+        usuario.setSenha(passwordEncoder.encode(dto.password()));
+        usuario.setRole("USER");
 
-        return CadastroResponseDTO.from(usuarioRepository.save(usuario));
+        Usuario salvo = usuarioRepository.save(usuario);
+        return RegisterResponseDTO.of(salvo);
     }
 }

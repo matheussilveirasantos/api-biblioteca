@@ -5,8 +5,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "usuario")
 public class Usuario {
@@ -16,34 +14,34 @@ public class Usuario {
     private Long id;
 
     @NotBlank(message = "O nome é obrigatório")
-    @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres")
+    @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String nome;
 
-    @NotBlank(message = "O e-mail é obrigatório")
-    @Email(message = "E-mail inválido")
+    @NotBlank(message = "O username é obrigatório")
+    @Size(max = 50)
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
+
+    @NotBlank(message = "O email é obrigatório")
+    @Email(message = "Email inválido")
     @Size(max = 150)
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @NotBlank(message = "A senha é obrigatória")
+    @NotBlank
     @Column(nullable = false)
     private String senha;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private RoleEnum role = RoleEnum.USER;
-
-    @Column(nullable = false)
-    private Boolean ativo = true;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime criadoEm = LocalDateTime.now();
+    private String role = "USER";
 
     public Usuario() {}
 
-    public Usuario(String nome, String email, String senha, RoleEnum role) {
+    public Usuario(Long id, String nome, String username, String email, String senha, String role) {
+        this.id = id;
         this.nome = nome;
+        this.username = username;
         this.email = email;
         this.senha = senha;
         this.role = role;
@@ -55,29 +53,15 @@ public class Usuario {
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
 
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
 
-    public RoleEnum getRole() { return role; }
-    public void setRole(RoleEnum role) { this.role = role; }
-
-    public Boolean getAtivo() { return ativo; }
-    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
-
-    public LocalDateTime getCriadoEm() { return criadoEm; }
-    public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Usuario)) return false;
-        Usuario usuario = (Usuario) o;
-        return id != null && id.equals(usuario.id);
-    }
-
-    @Override
-    public int hashCode() { return getClass().hashCode(); }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }
