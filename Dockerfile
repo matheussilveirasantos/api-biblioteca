@@ -5,20 +5,18 @@ FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /app
 
-# Copia apenas os arquivos de dependência primeiro (melhora o cache do Docker)
 COPY pom.xml .
 COPY mvnw .
 COPY .mvn .mvn
 
 RUN chmod +x mvnw
 
-# Baixa as dependências em camada separada (cache eficiente)
+# Baixa dependências em camada separada (cache eficiente)
 RUN ./mvnw dependency:go-offline -q
 
-# Copia o restante do código-fonte
 COPY src ./src
 
-# Compila e empacota, pulando os testes
+# Compila e empacota, pulando testes
 RUN ./mvnw clean package -DskipTests -q
 
 # ================================
@@ -26,24 +24,24 @@ RUN ./mvnw clean package -DskipTests -q
 # ================================
 FROM eclipse-temurin:17-jre-alpine AS runtime
 
-# Cria usuário não-root por segurança
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# Cria o diretório de logs com as permissões corretas
-RUN mkdir -p logs && chown -R appuser:appgroup /app
-
-# Copia apenas o JAR gerado pelo stage de build
+# Copia apenas o JAR
 COPY --from=builder /app/target/biblioteca-0.0.1-SNAPSHOT.jar app.jar
+
+RUN chown appuser:appgroup app.jar
 
 USER appuser
 
 EXPOSE 8080
 
-# Configurações da JVM para container (limita uso de memória/CPU)
+# JVM otimizada para containers (Render Free: 512MB RAM)
 ENTRYPOINT ["java", \
   "-XX:+UseContainerSupport", \
   "-XX:MaxRAMPercentage=75.0", \
+  "-XX:+UseG1GC", \
   "-Djava.security.egd=file:/dev/./urandom", \
+  "-Dspring.profiles.active=prod", \
   "-jar", "app.jar"]

@@ -1,0 +1,22 @@
+# Maven
+target/
+*.class
+
+# IntelliJ / Eclipse
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Logs (Render usa stdout)
+logs/
+*.log
+*.log.*
+
+# Variáveis de ambiente — NUNCA commitar
+.env
+
+# OS
+.DS_Store
+Thumbs.db
